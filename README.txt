@@ -1,0 +1,1 @@
+Script usado para gerar o código SQL para inserção em massa de usuários no banco de dados. O script lê os registros da planilha e gera um arquivo 'txt' com as linhas em SQL na pasta indicada pela variável 'caminho'.

@@ -1,0 +1,82 @@
+﻿Function massInsert()
+
+    Dim nomearq, caminho, condi1, condi2, condi3, cabeca1, cabeca2, cabeca3, cabeca4, cabeca5, cabeca6, resultado1, resultado2, resultado3, mat, nome As String
+    Dim a As Integer
+    
+    nomearq = "sql.txt"
+    caminho = "P:\çynqui\"
+    a = FreeFile
+    
+    'condições de execução
+    condi1 = "IF NOT EXISTS (SELECT NU_CREDENCIAL FROM dbo.CREDENCIAL WHERE NU_CREDENCIAL = "
+    condi2 = "IF NOT EXISTS (SELECT NU_MATRICULA FROM dbo.PESSOA WHERE NU_MATRICULA = "
+    condi3 = "IF NOT EXISTS (SELECT dbo.CREDENCIAL_PESSOA.CD_CREDENCIAL FROM dbo.CREDENCIAL_PESSOA INNER JOIN dbo.CREDENCIAL ON dbo.CREDENCIAL_PESSOA.CD_CREDENCIAL = dbo.CREDENCIAL.CD_CREDENCIAL WHERE dbo.CREDENCIAL.NU_CREDENCIAL = "
+    
+    'cabeçalho das instruções
+    cabeca1 = "INSERT INTO dbo.CREDENCIAL (CD_TIPO_CREDENCIAL, CD_ESTRUTURA_ORGANIZACIONAL, TP_TECNOLOGIA, NU_CREDENCIAL, FL_PERMANENTE, FL_DISPONIVEL_USO) VALUES "
+    cabeca2 = "INSERT INTO dbo.PESSOA (NU_MATRICULA,NM_PESSOA,CD_SITUACAO_PESSOA,CD_ESTRUTURA_ORGANIZACIONAL,CD_ESTRUTURA_ORG_EMPRESA,CD_PERFIL_ACESSO) VALUES "
+    cabeca3 = "INSERT INTO dbo.CREDENCIAL_PESSOA (CD_CREDENCIAL, CD_PESSOA, DT_INICIO, DT_FIM, DT_BAIXA_CREDENCIAL, FL_PERMANENTE, TP_TECNOLOGIA) (SELECT dbo.CREDENCIAL.CD_CREDENCIAL, CD_PESSOA, getDate(), null, null, 1, 3 FROM dbo.CREDENCIAL INNER JOIN dbo.PESSOA ON dbo.PESSOA.NU_MATRICULA = dbo.CREDENCIAL.NU_CREDENCIAL WHERE NU_CREDENCIAL = "
+    cabeca4 = "UPDATE dbo.CREDENCIAL_PESSOA SET CD_CREDENCIAL = (SELECT CD_CREDENCIAL FROM dbo.CREDENCIAL WHERE NU_CREDENCIAL = "
+    'Nao é preciso atualizar CD_PESSOA em dbo.CREDENCIAL_PESSOA pois ela permanecerá a mesma
+    cabeca6 = "), DT_FIM = null, DT_BAIXA_CREDENCIAL = null, FL_PERMANENTE = 1, TP_TECNOLOGIA = 3 WHERE dbo.CREDENCIAL_PESSOA.CD_PESSOA = (SELECT CD_PESSOA FROM dbo.PESSOA WHERE NU_MATRICULA = "
+    
+    'inicialização das variáveis
+    resultado1 = ""
+    resultado2 = ""
+    resultado3 = ""
+    
+    For rep = 1 To 1253
+        
+        mat = Range("A" & rep).Value
+        
+        If (mat <> "") Then 'se a célula não está vazia
+        
+            'se a variável 'resultado' está vazia, apenas inserimos o resultado, caso já tenha sido preenchida, adicionamos um ponto e vírgula e pulamos a linha
+            If (resultado1 <> "") Then
+                resultado1 = resultado1 & ";" & vbCr & condi1 & mat & ")" & vbCr & cabeca1 & "(1,1,3," & mat & ",1,1)"
+            Else
+                resultado1 = condi1 & mat & ")" & vbCr & cabeca1 & "(1,1,3," & mat & ",1,1)"
+            End If
+			'resultado1 = IF NOT EXISTS (SELECT NU_CREDENCIAL FROM dbo.CREDENCIAL WHERE NU_CREDENCIAL = 08271) 
+			'INSERT INTO dbo.CREDENCIAL (CD_TIPO_CREDENCIAL, CD_ESTRUTURA_ORGANIZACIONAL, TP_TECNOLOGIA, NU_CREDENCIAL, FL_PERMANENTE, FL_DISPONIVEL_USO) VALUES (1,1,3,08271,1,1);
+          
+            'evitamos o bug em caso de apóstrofo no nome
+            nome = Range("C" & rep).Value
+            nome = Replace(nome, "'", "''")
+            
+            If (resultado2 <> "") Then
+                resultado2 = resultado2 & ";" & vbCr & condi2 & mat & ")" & vbCr & cabeca2 & "(" & mat & ",'" & nome & "',11,1,1,1)"
+            Else
+                resultado2 = condi2 & mat & ")" & vbCr & cabeca2 & "(" & mat & ",'" & nome & "',11,1,1,1)"
+            End If
+			'resultado2 = IF NOT EXISTS (SELECT NU_MATRICULA FROM dbo.PESSOA WHERE NU_MATRICULA = 01234)
+			'INSERT INTO dbo.PESSOA (NU_MATRICULA,NM_PESSOA,CD_SITUACAO_PESSOA,CD_ESTRUTURA_ORGANIZACIONAL,CD_ESTRUTURA_ORG_EMPRESA,CD_PERFIL_ACESSO) VALUES (01234,'NOME COMPLETO DO ALUNO',11,1,1,1);
+             
+            If (resultado3 <> "") Then
+                resultado3 = resultado3 & ";" & vbCr & condi3 & mat & ")" & vbCr & cabeca3 & mat & ")" & vbCr & "ELSE" & vbCr & cabeca4 & mat & cabeca6 & mat & ")"
+            Else
+                resultado3 = condi3 & mat & ")" & vbCr & cabeca3 & mat & ")" & vbCr & "ELSE" & vbCr & cabeca4 & mat & cabeca6 & mat & ")"
+            End If
+			'resultado3 = IF NOT EXISTS (SELECT dbo.CREDENCIAL_PESSOA.CD_CREDENCIAL FROM dbo.CREDENCIAL_PESSOA INNER JOIN dbo.CREDENCIAL ON dbo.CREDENCIAL_PESSOA.CD_CREDENCIAL = dbo.CREDENCIAL.CD_CREDENCIAL WHERE dbo.CREDENCIAL.NU_CREDENCIAL = 01234)
+			'INSERT INTO dbo.CREDENCIAL_PESSOA (CD_CREDENCIAL, CD_PESSOA, DT_INICIO, DT_FIM, DT_BAIXA_CREDENCIAL, FL_PERMANENTE, TP_TECNOLOGIA) (SELECT dbo.CREDENCIAL.CD_CREDENCIAL, CD_PESSOA, getDate(), null, null, 1, 3 FROM dbo.CREDENCIAL INNER JOIN dbo.PESSOA ON dbo.PESSOA.NU_MATRICULA = dbo.CREDENCIAL.NU_CREDENCIAL WHERE NU_CREDENCIAL = 01234)
+			'ELSE
+			'UPDATE dbo.CREDENCIAL_PESSOA SET CD_CREDENCIAL = (SELECT CD_CREDENCIAL FROM dbo.CREDENCIAL WHERE NU_CREDENCIAL = 01234), DT_FIM = null, DT_BAIXA_CREDENCIAL = null, FL_PERMANENTE = 1, TP_TECNOLOGIA = 3 WHERE dbo.CREDENCIAL_PESSOA.CD_PESSOA = (SELECT CD_PESSOA FROM dbo.PESSOA WHERE NU_MATRICULA = 01234);
+          
+        End If
+         
+    Next rep
+    
+    'adicionamos ponto e vírgula no final de cada instrução
+    resultado1 = resultado1 & ";"
+    resultado2 = resultado2 & ";"
+    resultado3 = resultado3 & ";"
+    
+    'escrevemos os resultados no arquivo de texto
+    Open caminho & nomearq For Output As #a
+        Print #a, resultado1
+        Print #a, resultado2
+        Print #a, resultado3
+    Close #a
+	
+End Function
+
